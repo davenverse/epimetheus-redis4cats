@@ -81,7 +81,7 @@ object RedisMetricOps {
     ) = for {
       operations <- Histogram.labelledBuckets(
         cr,
-        prefix |+| Name("_") |+| Name("operation_terminations"),
+        prefix |+| Name("_") |+| Name("operations"),
         "Total Operations.",
         Sized(Label("termination_type"), Label("classifier")),
         { op: (TerminationType, Classifier) => Sized(reportTermination(op._1), op._2.value)},
@@ -89,8 +89,8 @@ object RedisMetricOps {
       )
       active<- Gauge.labelled(
         cr, 
-        prefix |+| Name("_") |+| Name("active_request_count"),
-        "Total Active Requests.",
+        prefix |+| Name("_") |+| Name("active"),
+        "Total Active Operations.",
         Sized(Label("classifier")),
         {c: Classifier => Sized(c.value)}
       )
