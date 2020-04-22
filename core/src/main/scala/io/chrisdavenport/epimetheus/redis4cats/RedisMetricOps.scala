@@ -106,8 +106,15 @@ object RedisMetricOps {
 
     def recordTotalTime(terminationType: TerminationType, elapsed: Long, classifier: Option[String]): F[Unit] = {
       metricsCollection.operations.label((terminationType, Classifier.opt(classifier)))
-        .observe(elapsed.toDouble)
+        .observe(nanosToSeconds(elapsed))
     }
   }
+
+
+  // Elapsed is in Nanos, but buckets are in Seconds
+  private def nanosToSeconds(l: Long): Double = 
+    l / nanoseconds_per_second
+  private val nanoseconds_per_second = 1E9
+
 
 }
