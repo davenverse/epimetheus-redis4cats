@@ -348,4 +348,32 @@ object RedisMetrics {
     def watch(keys: K*): F[Unit] = transform(commands.watch(keys:_*))
   }
 
+  object MapKCommands {
+    def mapK[G[_], F[_], K, V](
+    commands: StringCommands[G, K, V] with HashCommands[G, K, V]
+      with SetCommands[G, K, V]
+      with SortedSetCommands[G, K, V]
+      with ListCommands[G, K, V]
+      with GeoCommands[G, K, V]
+      with ConnectionCommands[G]
+      with ServerCommands[G, K]
+      with TransactionalCommands[G, K]
+      with PipelineCommands[G]
+      with ScriptCommands[G, K, V]
+      with KeyCommands[G, K], 
+    transform: G ~> F
+  ) : StringCommands[F, K, V]
+    with HashCommands[F, K, V]
+    with SetCommands[F, K, V]
+    with SortedSetCommands[F, K, V]
+    with ListCommands[F, K, V]
+    with GeoCommands[F, K, V]
+    with ConnectionCommands[F]
+    with ServerCommands[F, K]
+    with TransactionalCommands[F, K]
+    with PipelineCommands[F]
+    with ScriptCommands[F, K, V]
+    with KeyCommands[F, K] = new MapKCommands[G, F, K, V](commands, transform)
+  }
+
 }
