@@ -18,7 +18,7 @@ lazy val core = project.in(file("core"))
     // we need to work around deprecated methods we have to implement from upstream, but we can't use @nowarn
     // as long as 2.12 is still supported – so we rely on 2.13 warnings only
     scalacOptions := (CrossVersion.partialVersion(scalaVersion.value) match {
-      case Some((2, y)) if y >= 13 => "-Wconf:cat=deprecation:is" +: scalacOptions.value
+      case Some((2, y)) if y >= 13 =>  scalacOptions.value :+ "-Wconf:cat=deprecation:is"
       case _ => scalacOptions.value.filter(_ != "-Xfatal-warnings")
     })
   )
