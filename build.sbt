@@ -2,7 +2,7 @@ import sbtcrossproject.CrossPlugin.autoImport.{crossProject, CrossType}
 
 val specs2V = "4.8.1"
 
-val kindProjectorV = "0.11.0"
+val kindProjectorV = "0.11.2"
 val betterMonadicForV = "0.3.1"
 
 // Projects
@@ -14,7 +14,13 @@ lazy val `epimetheus-redis4cats` = project.in(file("."))
 lazy val core = project.in(file("core"))
   .settings(commonSettings)
   .settings(
-    name := "epimetheus-redis4cats"
+    name := "epimetheus-redis4cats",
+    // we need to work around deprecated methods we have to implement from upstream, but we can't use @nowarn
+    // as long as 2.12 is still supported – so we rely on 2.13 warnings only
+    scalacOptions := (CrossVersion.partialVersion(scalaVersion.value) match {
+      case Some((2, y)) if y >= 13 =>  scalacOptions.value :+ "-Wconf:cat=deprecation:is"
+      case _ => scalacOptions.value.filter(_ != "-Xfatal-warnings")
+    })
   )
 
 lazy val site = project.in(file("site"))
@@ -67,15 +73,15 @@ lazy val site = project.in(file("site"))
 
 // General Settings
 lazy val commonSettings = Seq(
-  scalaVersion := "2.13.1",
-  crossScalaVersions := Seq(scalaVersion.value, "2.12.10"),
+  scalaVersion := "2.13.4",
+  crossScalaVersions := Seq(scalaVersion.value, "2.12.12"),
 
   addCompilerPlugin("org.typelevel" %% "kind-projector" % kindProjectorV cross CrossVersion.full),
   addCompilerPlugin("com.olegpy"    %% "better-monadic-for" % betterMonadicForV),
 
   libraryDependencies ++= Seq(
     "io.chrisdavenport"           %% "epimetheus"                 % "0.4.0",
-    "dev.profunktor"              %% "redis4cats-effects"         % "0.9.6",
+    "dev.profunktor"              %% "redis4cats-effects"         % "0.11.0",
 
     "org.specs2"                  %% "specs2-core"                % specs2V       % Test,
     "org.specs2"                  %% "specs2-scalacheck"          % specs2V       % Test
