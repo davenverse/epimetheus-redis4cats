@@ -81,7 +81,7 @@ lazy val commonSettings = Seq(
 
   libraryDependencies ++= Seq(
     "io.chrisdavenport"           %% "epimetheus"                 % "0.4.0",
-    "dev.profunktor"              %% "redis4cats-effects"         % "0.11.0",
+    "dev.profunktor"              %% "redis4cats-effects"         % "0.11.1",
 
     "org.specs2"                  %% "specs2-core"                % specs2V       % Test,
     "org.specs2"                  %% "specs2-scalacheck"          % specs2V       % Test
