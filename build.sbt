@@ -73,7 +73,7 @@ lazy val site = project.in(file("site"))
 
 // General Settings
 lazy val commonSettings = Seq(
-  scalaVersion := "2.13.4",
+  scalaVersion := "2.13.5",
   crossScalaVersions := Seq(scalaVersion.value, "2.12.12"),
 
   addCompilerPlugin("org.typelevel" %% "kind-projector" % kindProjectorV cross CrossVersion.full),
