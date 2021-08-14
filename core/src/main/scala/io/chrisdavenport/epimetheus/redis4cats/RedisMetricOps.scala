@@ -4,7 +4,6 @@ import cats._
 import cats.implicits._
 import cats.effect._
 import io.chrisdavenport.epimetheus._
-import shapeless._
 
 
 trait RedisMetricOps[M[_]] {
@@ -84,7 +83,7 @@ object RedisMetricOps {
         prefix |+| Name("_") |+| Name("operations"),
         "Total Operations.",
         Sized(Label("termination_type"), Label("classifier")),
-        { op: (TerminationType, Classifier) => Sized(reportTermination(op._1), op._2.value)},
+        { (op: (TerminationType, Classifier)) => Sized(reportTermination(op._1), op._2.value)},
         buckets:_*
       )
       active<- Gauge.labelled(
@@ -92,7 +91,7 @@ object RedisMetricOps {
         prefix |+| Name("_") |+| Name("active"),
         "Total Active Operations.",
         Sized(Label("classifier")),
-        {c: Classifier => Sized(c.value)}
+        {(c: Classifier) => Sized(c.value)}
       )
 
     } yield MetricsCollection[F](operations, active)
