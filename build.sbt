@@ -1,7 +1,7 @@
 val scala213 = "2.13.6"
 
 ThisBuild / scalaVersion := scala213
-ThisBuild / crossScalaVersions := Seq("2.12.14", scala213, "3.0.0")
+ThisBuild / crossScalaVersions := Seq("2.12.14", scala213, "3.0.1")
 
 ThisBuild / licenses := Seq("MIT" -> url("http://opensource.org/licenses/MIT"))
 
