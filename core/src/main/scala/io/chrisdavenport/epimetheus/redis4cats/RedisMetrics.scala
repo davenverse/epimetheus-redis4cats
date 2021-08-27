@@ -2,15 +2,12 @@ package io.chrisdavenport.epimetheus.redis4cats
 
 import cats._
 import cats.data.NonEmptyList
-import cats.implicits._
+import cats.syntax.all._
 import cats.effect._
 import dev.profunktor.redis4cats.algebra._
 import dev.profunktor.redis4cats.{data, effects}
 
-import java.util.concurrent.TimeUnit
 import scala.concurrent.TimeoutException
-import cats.effect.ExitCase.Canceled
-import cats.effect.ExitCase.Completed
 import RedisMetricOps.TerminationType
 
 import java.time.Instant
@@ -18,7 +15,7 @@ import scala.concurrent.duration.{Duration, FiniteDuration}
 
 object RedisMetrics {
 
-  def middleware[F[_]: Sync: Clock, K, V](
+  def middleware[F[_]: MonadCancelThrow: Clock, K, V](
     commands: StringCommands[F, K, V] with HashCommands[F, K, V]
       with SetCommands[F, K, V]
       with SortedSetCommands[F, K, V]
@@ -46,28 +43,28 @@ object RedisMetrics {
 
     val clock = Clock[F]
 
-    def registerCompletion(start: Long)(e: ExitCase[Throwable]): F[Unit] =
+    def registerCompletion[G[_], A](start: FiniteDuration)(e: Outcome[G, Throwable, A]): F[Unit] =
       clock
-        .monotonic(TimeUnit.NANOSECONDS)
+        .monotonic
         .flatMap { now =>
           e match {
-            case Canceled => 
-              ops.recordTotalTime(TerminationType.Canceled, now - start, classifier)
-            case Completed =>
-              ops.recordTotalTime(TerminationType.Success, now - start, classifier)
-            case cats.effect.ExitCase.Error(e) =>
+            case Outcome.Succeeded(_) =>
+              ops.recordTotalTime(TerminationType.Success, (now - start).toNanos, classifier)
+            case Outcome.Errored(e) =>
               if (e.isInstanceOf[TimeoutException]) {
-                ops.recordTotalTime(TerminationType.Timeout, now - start, classifier)
+                ops.recordTotalTime(TerminationType.Timeout, (now - start).toNanos, classifier)
               } else {
-                ops.recordTotalTime(TerminationType.Error(e), now - start, classifier)
+                ops.recordTotalTime(TerminationType.Error(e), (now - start).toNanos, classifier)
               }
+            case Outcome.Canceled() =>
+              ops.recordTotalTime(TerminationType.Canceled, (now - start).toNanos, classifier)
           }
           
         }
 
     val transform: F ~> F = new ~>[F, F]{
       def apply[A](fa: F[A]): F[A] = ops.active(classifier).use{_ => 
-        Bracket[F, Throwable].bracketCase(clock.monotonic(TimeUnit.NANOSECONDS))(_ => fa)(registerCompletion(_)(_))
+        MonadCancelThrow[F].bracketCase(clock.monotonic)(_ => fa)(registerCompletion(_)(_))
       }
     }
 
@@ -371,7 +368,7 @@ object RedisMetrics {
       transform(commands.zRemRangeByLex(key, range))
     def zRemRangeByRank(key: K, start: Long, stop: Long): F[Long] =
       transform(commands.zRemRangeByRank(key, start, stop))
-    def zRemRangeByScore(key: K, range: dev.profunktor.redis4cats.effects.ZRange[V])(implicit ev: Numeric[V]): F[Long] =
+    def zRemRangeByScore[T](key: K, range: dev.profunktor.redis4cats.effects.ZRange[T])(implicit evidence$6: Numeric[T]): F[Long] =
       transform(commands.zRemRangeByScore(key, range))
     def zUnionStore(destination: K, args: Option[io.lettuce.core.ZStoreArgs], keys: K*): F[Long] =
       transform(commands.zUnionStore(destination, args, keys:_*))
