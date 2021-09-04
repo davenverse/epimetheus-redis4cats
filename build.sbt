@@ -5,7 +5,7 @@ ThisBuild / crossScalaVersions := Seq("2.12.14", scala213, "3.0.0")
 
 ThisBuild / licenses := Seq("MIT" -> url("http://opensource.org/licenses/MIT"))
 
-val kindProjectorV = "0.13.0"
+val kindProjectorV = "0.13.2"
 val betterMonadicForV = "0.3.1"
 
 // Projects
