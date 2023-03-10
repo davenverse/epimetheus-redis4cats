@@ -21,12 +21,14 @@ object RedisMetrics {
       with SortedSetCommands[F, K, V]
       with ListCommands[F, K, V]
       with GeoCommands[F, K, V]
-      with ConnectionCommands[F]
+      with ConnectionCommands[F, K]
       with ServerCommands[F, K]
-      with TransactionalCommands[F, K]
+      with Transaction[F]
+      with Watcher[F, K]
       with PipelineCommands[F]
       with ScriptCommands[F, K, V]
-      with KeyCommands[F, K], 
+      with KeyCommands[F, K]
+      with BitCommands[F, K, V],
     ops: RedisMetricOps[F],
     classifier: Option[String] = None
   ): StringCommands[F, K, V] with HashCommands[F, K, V]
@@ -34,12 +36,14 @@ object RedisMetrics {
     with SortedSetCommands[F, K, V]
     with ListCommands[F, K, V]
     with GeoCommands[F, K, V]
-    with ConnectionCommands[F]
+    with ConnectionCommands[F, K]
     with ServerCommands[F, K]
-    with TransactionalCommands[F, K]
+    with Transaction[F]
+    with Watcher[F, K]
     with PipelineCommands[F]
     with ScriptCommands[F, K, V]
-    with KeyCommands[F, K] = {
+    with KeyCommands[F, K]
+    with BitCommands[F, K, V] = {
 
     val clock = Clock[F]
 
@@ -77,12 +81,14 @@ object RedisMetrics {
       with SortedSetCommands[G, K, V]
       with ListCommands[G, K, V]
       with GeoCommands[G, K, V]
-      with ConnectionCommands[G]
+      with ConnectionCommands[G, K]
       with ServerCommands[G, K]
-      with TransactionalCommands[G, K]
+      with Transaction[G]
+      with Watcher[G, K]
       with PipelineCommands[G]
       with ScriptCommands[G, K, V]
-      with KeyCommands[G, K], 
+      with KeyCommands[G, K]
+      with BitCommands[G, K, V],
     transform: G ~> F
   ) extends StringCommands[F, K, V]
     with HashCommands[F, K, V]
@@ -90,12 +96,19 @@ object RedisMetrics {
     with SortedSetCommands[F, K, V]
     with ListCommands[F, K, V]
     with GeoCommands[F, K, V]
-    with ConnectionCommands[F]
+    with ConnectionCommands[F, K]
     with ServerCommands[F, K]
-    with TransactionalCommands[F, K]
+    with Transaction[F]
+    with Watcher[F, K]
     with PipelineCommands[F]
     with ScriptCommands[F, K, V]
-    with KeyCommands[F, K]{
+    with KeyCommands[F, K]
+    with BitCommands[F, K, V] {
+    // Members declared in dev.profunktor.redis4cats.algebra.Client
+    def getClientId(): F[Long] = transform(commands.getClientId())
+    def getClientName(): F[Option[K]] = transform(commands.getClientName())
+    def setClientName(name: K): F[Boolean] = transform(commands.setClientName(name))
+
     // Members declared in dev.profunktor.redis4cats.algebra.AutoFlush
     def auth(password: CharSequence): F[Boolean] = transform(commands.auth(password))
     def auth(username: String, password: CharSequence): F[Boolean] = transform(commands.auth(username, password))
@@ -105,7 +118,7 @@ object RedisMetrics {
     def enableAutoFlush: F[Unit] = transform(commands.enableAutoFlush)
     def flushCommands: F[Unit] = transform(commands.flushCommands)
 
-    // Members declared in dev.profunktor.redis4cats.algebra.Bits
+    // Members declared in dev.profunktor.redis4cats.algebra.BitCommands
     def bitCount(key: K, start: Long, end: Long): F[Long] = transform(commands.bitCount(key, start, end))
     def bitCount(key: K): F[Long] = transform(commands.bitCount(key))
     def bitOpAnd(destination: K, sources: K*): F[Unit] = transform(commands.bitOpAnd(destination, sources:_*))
@@ -117,19 +130,22 @@ object RedisMetrics {
     def bitPos(key: K, state: Boolean, start: Long): F[Long] = transform(commands.bitPos(key, state, start))
     def bitPos(key: K, state: Boolean): F[Long] = transform(commands.bitPos(key, state))
 
+    def bitField(key: K, operations: BitCommandOperation*): F[List[Long]] = transform(commands.bitField(key, operations:_*))
+    def setBit(key: K, offset: Long, value: Int): F[Long] = transform(commands.setBit(key, offset, value))
+
     // Members declared in dev.profunktor.redis4cats.algebra.Decrement
-    def decr(key: K)(implicit N: Numeric[V]): F[Long] = transform(commands.decr(key))
-    def decrBy(key: K, amount: Long)(implicit N: Numeric[V]): F[Long] = transform(commands.decrBy(key, amount))
+    def decr(key: K): F[Long] = transform(commands.decr(key))
+    def decrBy(key: K, amount: Long): F[Long] = transform(commands.decrBy(key, amount))
 
     // Members declared in dev.profunktor.redis4cats.algebra.Diagnostic
     def dbsize: F[Long] = transform(commands.dbsize)
     def info: F[Map[String,String]] = transform(commands.info)
+    def info(section: String): F[Map[String, String]] = transform(commands.info(section))
     def lastSave: F[java.time.Instant] = transform(commands.lastSave)
     def slowLogLen: F[Long] = transform(commands.slowLogLen)
 
     // Members declared in dev.profunktor.redis4cats.algebra.Flush
     def flushAll: F[Unit] = transform(commands.flushAll)
-    def flushAllAsync: F[Unit] = transform(commands.flushAllAsync)
     def keys(key: K): F[List[K]] = transform(commands.keys(key))
 
     // Members declared in dev.profunktor.redis4cats.algebra.GeoGetter
@@ -163,6 +179,7 @@ object RedisMetrics {
     // Members declared in dev.profunktor.redis4cats.algebra.Getter
     def get(key: K): F[Option[V]] = transform(commands.get(key))
     def getBit(key: K, offset: Long): F[Option[Long]] = transform(commands.getBit(key, offset))
+    def getEx(key: K, getExArg: dev.profunktor.redis4cats.effects.GetExArg): F[Option[V]] = transform(commands.getEx(key, getExArg))
     def getRange(key: K, start: Long, end: Long): F[Option[V]] = transform(commands.getRange(key, start, end))
     def strLen(key: K): F[Option[Long]] = transform(commands.strLen(key))
 
@@ -180,20 +197,21 @@ object RedisMetrics {
     def hmGet(key: K, fields: K*): F[Map[K,V]] = transform(commands.hmGet(key, fields:_*))
 
     // Members declared in dev.profunktor.redis4cats.algebra.HashIncrement
-    def hIncrBy(key: K, field: K, amount: Long)(implicit N: Numeric[V]): F[Long] =
+    def hIncrBy(key: K, field: K, amount: Long): F[Long] =
       transform(commands.hIncrBy(key, field, amount))
-    def hIncrByFloat(key: K, field: K, amount: Double)(implicit N: Numeric[V]): F[Double] =
+    def hIncrByFloat(key: K, field: K, amount: Double): F[Double] =
       transform(commands.hIncrByFloat(key, field, amount))
 
     // Members declared in dev.profunktor.redis4cats.algebra.HashSetter
     def hSet(key: K, field: K, value: V): F[Boolean] = transform(commands.hSet(key, field, value))
     def hSetNx(key: K, field: K, value: V): F[Boolean] = transform(commands.hSetNx(key, field, value))
     def hmSet(key: K, fieldValues: Map[K,V]): F[Unit] = transform(commands.hmSet(key, fieldValues))
+    def hSet(key: K, fieldValues: Map[K,V]): F[Long] = transform(commands.hSet(key, fieldValues))
 
     // Members declared in dev.profunktor.redis4cats.algebra.Increment
-    def incr(key: K)(implicit N: Numeric[V]): F[Long] = transform(commands.incr(key))
-    def incrBy(key: K, amount: Long)(implicit N: Numeric[V]): F[Long] = transform(commands.incrBy(key, amount))
-    def incrByFloat(key: K, amount: Double)(implicit N: Numeric[V]): F[Double] = transform(commands.incrByFloat(key, amount))
+    def incr(key: K): F[Long] = transform(commands.incr(key))
+    def incrBy(key: K, amount: Long): F[Long] = transform(commands.incrBy(key, amount))
+    def incrByFloat(key: K, amount: Double): F[Double] = transform(commands.incrByFloat(key, amount))
 
     // Members declared in dev.profunktor.redis4cats.algebra.KeyCommands
     def del(key: K*): F[Long] = transform(commands.del(key:_*))
@@ -282,11 +300,12 @@ object RedisMetrics {
 
     // Members declared in dev.profunktor.redis4cats.algebra.SetCommands
     def sIsMember(key: K, value: V): F[Boolean] = transform(commands.sIsMember(key, value))
+    def sMisMember(key: K, values: V*): F[List[Boolean]] = transform(commands.sMisMember(key, values:_*))
 
     // Members declared in dev.profunktor.redis4cats.algebra.SetDeletion
     def sPop(key: K, count: Long): F[Set[V]] = transform(commands.sPop(key, count))
     def sPop(key: K): F[Option[V]] = transform(commands.sPop(key))
-    def sRem(key: K, values: V*): F[Unit] = transform(commands.sRem(key, values:_*))
+    def sRem(key: K, values: V*): F[Long] = transform(commands.sRem(key, values:_*))
 
     // Members declared in dev.profunktor.redis4cats.algebra.SetGetter
     def sCard(key: K): F[Long] = transform(commands.sCard(key))
@@ -345,6 +364,12 @@ object RedisMetrics {
       transform(commands.zRevRangeWithScores(key, start, stop))
     def zRevRank(key: K, value: V): F[Option[Long]] = transform(commands.zRevRank(key, value))
     def zScore(key: K, value: V): F[Option[Double]] = transform(commands.zScore(key, value))
+    def zDiff(keys: K*): F[List[V]] = transform(commands.zDiff(keys:_*))
+    def zDiffWithScores(keys: K*): F[List[dev.profunktor.redis4cats.effects.ScoreWithValue[V]]] = transform(commands.zDiffWithScores(keys:_*))
+    def zInter(args: Option[io.lettuce.core.ZAggregateArgs], keys: K*): F[List[V]] = transform(commands.zInter(args, keys:_*))
+    def zInterWithScores(args: Option[io.lettuce.core.ZAggregateArgs], keys: K*): F[List[dev.profunktor.redis4cats.effects.ScoreWithValue[V]]] = transform(commands.zInterWithScores(args, keys:_*))
+    def zUnion(args: Option[io.lettuce.core.ZAggregateArgs], keys: K*): F[List[V]] = transform(commands.zUnion(args, keys:_*))
+    def zUnionWithScores(args: Option[io.lettuce.core.ZAggregateArgs], keys: K*): F[List[dev.profunktor.redis4cats.effects.ScoreWithValue[V]]] = transform(commands.zUnionWithScores(args, keys:_*))
 
     // Members declared in dev.profunktor.redis4cats.algebra.SortedSetSetter
     def bzPopMax(timeout: Duration, keys: NonEmptyList[K]): F[Option[(K, effects.ScoreWithValue[V])]] =
@@ -381,6 +406,10 @@ object RedisMetrics {
     // Members declared in dev.profunktor.redis4cats.algebra.Watcher
     def unwatch: F[Unit] = transform(commands.unwatch)
     def watch(keys: K*): F[Unit] = transform(commands.watch(keys:_*))
+
+    // Members declared in dev.profunktor.redis4cats.algebra.Unsafe
+    def unsafe[A](f: io.lettuce.core.cluster.api.async.RedisClusterAsyncCommands[K, V] => io.lettuce.core.RedisFuture[A]): F[A] = transform(commands.unsafe(f))
+    def unsafeSync[A](f: io.lettuce.core.cluster.api.async.RedisClusterAsyncCommands[K, V] => A): F[A] = transform(commands.unsafeSync(f))
   }
 
   object MapKCommands {
@@ -390,12 +419,14 @@ object RedisMetrics {
       with SortedSetCommands[G, K, V]
       with ListCommands[G, K, V]
       with GeoCommands[G, K, V]
-      with ConnectionCommands[G]
+      with ConnectionCommands[G, K]
       with ServerCommands[G, K]
-      with TransactionalCommands[G, K]
+      with Transaction[G]
+      with Watcher[G, K]
       with PipelineCommands[G]
       with ScriptCommands[G, K, V]
-      with KeyCommands[G, K], 
+      with KeyCommands[G, K]
+      with BitCommands[G, K, V],
     transform: G ~> F
   ) : StringCommands[F, K, V]
     with HashCommands[F, K, V]
@@ -403,12 +434,14 @@ object RedisMetrics {
     with SortedSetCommands[F, K, V]
     with ListCommands[F, K, V]
     with GeoCommands[F, K, V]
-    with ConnectionCommands[F]
+    with ConnectionCommands[F, K]
     with ServerCommands[F, K]
-    with TransactionalCommands[F, K]
+    with Transaction[F]
+    with Watcher[F, K]
     with PipelineCommands[F]
     with ScriptCommands[F, K, V]
-    with KeyCommands[F, K] = new MapKCommands[G, F, K, V](commands, transform)
+    with KeyCommands[F, K]
+    with BitCommands[F, K, V] = new MapKCommands[G, F, K, V](commands, transform)
   }
 
 }

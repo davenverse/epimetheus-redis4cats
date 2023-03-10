@@ -1,11 +1,11 @@
-val scala213 = "2.13.6"
+val scala213 = "2.13.10"
 
 ThisBuild / scalaVersion := scala213
-ThisBuild / crossScalaVersions := Seq("2.12.14", scala213, "3.0.0")
+ThisBuild / crossScalaVersions := Seq("2.12.17", scala213, "3.2.2")
 
 ThisBuild / licenses := Seq("MIT" -> url("http://opensource.org/licenses/MIT"))
 
-val kindProjectorV = "0.13.0"
+val kindProjectorV = "0.13.2"
 val betterMonadicForV = "0.3.1"
 
 // Projects
@@ -43,7 +43,7 @@ lazy val site = project.in(file("site"))
 lazy val commonSettings = Seq(
   libraryDependencies ++= Seq(
     "io.chrisdavenport"           %% "epimetheus"                 % "0.5.0-M2",
-    "dev.profunktor"              %% "redis4cats-effects"         % "1.0.0"
+    "dev.profunktor"              %% "redis4cats-effects"         % "1.4.0"
   ),
   libraryDependencies ++= PartialFunction.condOpt(CrossVersion.partialVersion(scalaVersion.value)) { case Some((2, _)) =>
     Seq(
