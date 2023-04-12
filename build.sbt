@@ -43,7 +43,7 @@ lazy val site = project.in(file("site"))
 lazy val commonSettings = Seq(
   libraryDependencies ++= Seq(
     "io.chrisdavenport"           %% "epimetheus"                 % "0.5.0-M2",
-    "dev.profunktor"              %% "redis4cats-effects"         % "1.4.0"
+    "dev.profunktor"              %% "redis4cats-effects"         % "1.4.1"
   ),
   libraryDependencies ++= PartialFunction.condOpt(CrossVersion.partialVersion(scalaVersion.value)) { case Some((2, _)) =>
     Seq(
