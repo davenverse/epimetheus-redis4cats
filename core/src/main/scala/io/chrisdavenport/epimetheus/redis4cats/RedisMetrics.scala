@@ -184,7 +184,7 @@ object RedisMetrics {
     def strLen(key: K): F[Option[Long]] = transform(commands.strLen(key))
 
     // Members declared in dev.profunktor.redis4cats.algebra.HashCommands
-    def hDel(key: K, fields: K*): F[Long] = transform(commands.hDel(key, fields:_*))
+    def hDel(key: K, field: K, fields: K*): F[Long] = transform(commands.hDel(key, field, fields:_*))
     def hExists(key: K, field: K): F[Boolean] = transform(commands.hExists(key, field))
 
     // Members declared in dev.profunktor.redis4cats.algebra.HashGetter
@@ -194,7 +194,7 @@ object RedisMetrics {
     def hLen(key: K): F[Option[Long]] = transform(commands.hLen(key))
     def hStrLen(key: K, field: K): F[Option[Long]] = transform(commands.hStrLen(key, field))
     def hVals(key: K): F[List[V]] = transform(commands.hVals(key))
-    def hmGet(key: K, fields: K*): F[Map[K,V]] = transform(commands.hmGet(key, fields:_*))
+    def hmGet(key: K, field: K, fields: K*): F[Map[K,V]] = transform(commands.hmGet(key, field, fields:_*))
 
     // Members declared in dev.profunktor.redis4cats.algebra.HashIncrement
     def hIncrBy(key: K, field: K, amount: Long): F[Long] =
