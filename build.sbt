@@ -33,6 +33,7 @@ lazy val site = project.in(file("site"))
   .enablePlugins(NoPublishPlugin)
   .enablePlugins(DavenverseMicrositePlugin)
   .dependsOn(core)
+  .settings(universalSettings)
   .settings{
     import microsites._
     Seq(
@@ -40,7 +41,7 @@ lazy val site = project.in(file("site"))
     )
   }
 
-// For regular modules, but not the root project
+// For regular modules
 lazy val commonSettings = universalSettings ++ Seq(
   libraryDependencies ++= Seq(
     "io.chrisdavenport"           %% "epimetheus"                 % "0.5.0",
@@ -53,7 +54,7 @@ lazy val commonSettings = universalSettings ++ Seq(
   }.toList.flatten
 )
 
-// For regular modules and the root project
+// For regular modules, the root project, and the microsite
 lazy val universalSettings = Seq(
   // overrides the stale one in sbt-davenverse
   libraryDependencies ++= PartialFunction.condOpt(CrossVersion.partialVersion(scalaVersion.value)) { case Some((2, _)) =>
