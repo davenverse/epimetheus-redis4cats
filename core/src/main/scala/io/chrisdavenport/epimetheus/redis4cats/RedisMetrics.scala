@@ -181,7 +181,7 @@ object RedisMetrics {
     def getBit(key: K, offset: Long): F[Option[Long]] = transform(commands.getBit(key, offset))
     def getEx(key: K, getExArg: dev.profunktor.redis4cats.effects.GetExArg): F[Option[V]] = transform(commands.getEx(key, getExArg))
     def getRange(key: K, start: Long, end: Long): F[Option[V]] = transform(commands.getRange(key, start, end))
-    def strLen(key: K): F[Option[Long]] = transform(commands.strLen(key))
+    def strLen(key: K): F[Long] = transform(commands.strLen(key))
 
     // Members declared in dev.profunktor.redis4cats.algebra.HashCommands
     def hDel(key: K, field: K, fields: K*): F[Long] = transform(commands.hDel(key, field, fields:_*))
@@ -191,8 +191,8 @@ object RedisMetrics {
     def hGet(key: K, field: K): F[Option[V]] = transform(commands.hGet(key, field))
     def hGetAll(key: K): F[Map[K,V]] = transform(commands.hGetAll(key))
     def hKeys(key: K): F[List[K]] = transform(commands.hKeys(key))
-    def hLen(key: K): F[Option[Long]] = transform(commands.hLen(key))
-    def hStrLen(key: K, field: K): F[Option[Long]] = transform(commands.hStrLen(key, field))
+    def hLen(key: K): F[Long] = transform(commands.hLen(key))
+    def hStrLen(key: K, field: K): F[Long] = transform(commands.hStrLen(key, field))
     def hVals(key: K): F[List[V]] = transform(commands.hVals(key))
     def hmGet(key: K, field: K, fields: K*): F[Map[K,V]] = transform(commands.hmGet(key, field, fields:_*))
 
@@ -251,7 +251,7 @@ object RedisMetrics {
 
     // Members declared in dev.profunktor.redis4cats.algebra.ListGetter
     def lIndex(key: K, index: Long): F[Option[V]] = transform(commands.lIndex(key, index))
-    def lLen(key: K): F[Option[Long]] = transform(commands.lLen(key))
+    def lLen(key: K): F[Long] = transform(commands.lLen(key))
     def lRange(key: K, start: Long, stop: Long): F[List[V]] = transform(commands.lRange(key, start, stop))
 
     // Members declared in dev.profunktor.redis4cats.algebra.ListPushPop
@@ -337,10 +337,10 @@ object RedisMetrics {
       transform(commands.setRange(key, value, offset))
 
     // Members declared in dev.profunktor.redis4cats.algebra.SortedSetGetter
-    def zCard(key: K): F[Option[Long]] = transform(commands.zCard(key))
-    def zCount[T](key: K, range: dev.profunktor.redis4cats.effects.ZRange[T])(implicit ev: Numeric[T]): F[Option[Long]] =
+    def zCard(key: K): F[Long] = transform(commands.zCard(key))
+    def zCount[T](key: K, range: dev.profunktor.redis4cats.effects.ZRange[T])(implicit ev: Numeric[T]): F[Long] =
       transform(commands.zCount(key, range))
-    def zLexCount(key: K, range: dev.profunktor.redis4cats.effects.ZRange[V]): F[Option[Long]] =
+    def zLexCount(key: K, range: dev.profunktor.redis4cats.effects.ZRange[V]): F[Long] =
       transform(commands.zLexCount(key, range))
     def zRange(key: K, start: Long, stop: Long): F[List[V]] =
       transform(commands.zRange(key, start, stop))
@@ -410,6 +410,54 @@ object RedisMetrics {
     // Members declared in dev.profunktor.redis4cats.algebra.Unsafe
     def unsafe[A](f: io.lettuce.core.cluster.api.async.RedisClusterAsyncCommands[K, V] => io.lettuce.core.RedisFuture[A]): F[A] = transform(commands.unsafe(f))
     def unsafeSync[A](f: io.lettuce.core.cluster.api.async.RedisClusterAsyncCommands[K, V] => A): F[A] = transform(commands.unsafeSync(f))
+
+    // Members declared in dev.profunktor.redis4cats.algebra.Client
+    def getClientInfo: F[Map[String,String]] = transform(commands.getClientInfo)
+    def setLibName(name: String): F[Boolean] = transform(commands.setLibName(name))
+    def setLibVersion(version: String): F[Boolean] = transform(commands.setLibVersion(version))
+
+    // Members declared in dev.profunktor.redis4cats.algebra.Flush
+    def flushAll(mode: dev.profunktor.redis4cats.effects.FlushMode): F[Unit] = transform(commands.flushAll(mode))
+    def flushDb(mode: dev.profunktor.redis4cats.effects.FlushMode): F[Unit] = transform(commands.flushDb(mode))
+    def flushDb: F[Unit] = transform(commands.flushDb)
+
+    // Members declared in dev.profunktor.redis4cats.algebra.Functions
+    def fcall(function: String, output: dev.profunktor.redis4cats.effects.ScriptOutputType[V], keys: List[K], values: List[V]): F[output.R] = transform(commands.fcall(function, output, keys, values))
+    def fcall(function: String, output: dev.profunktor.redis4cats.effects.ScriptOutputType[V], keys: List[K]): F[output.R] = transform(commands.fcall(function, output, keys))
+    def fcallReadOnly(function: String, output: dev.profunktor.redis4cats.effects.ScriptOutputType[V], keys: List[K], values: List[V]): F[output.R] = transform(commands.fcallReadOnly(function, output, keys, values))
+    def fcallReadOnly(function: String, output: dev.profunktor.redis4cats.effects.ScriptOutputType[V], keys: List[K]): F[output.R] = transform(commands.fcallReadOnly(function, output, keys))
+    def functionDump(): F[Array[Byte]] = transform(commands.functionDump())
+    def functionFlush(flushMode: dev.profunktor.redis4cats.effects.FlushMode): F[String] = transform(commands.functionFlush(flushMode))
+    def functionKill(): F[String] = transform(commands.functionKill())
+    def functionList(libraryName: String): F[List[Map[String,Any]]] = transform(commands.functionList(libraryName))
+    def functionList(): F[List[Map[String,Any]]] = transform(commands.functionList())
+    def functionLoad(functionCode: String, replace: Boolean): F[String] = transform(commands.functionLoad(functionCode, replace))
+    def functionLoad(functionCode: String): F[String] = transform(commands.functionLoad(functionCode))
+    def functionRestore(dump: Array[Byte], mode: dev.profunktor.redis4cats.effects.FunctionRestoreMode): F[String] = transform(commands.functionRestore(dump, mode))
+    def functionRestore(dump: Array[Byte]): F[String] = transform(commands.functionRestore(dump))
+
+    // Members declared in dev.profunktor.redis4cats.algebra.KeyCommands
+    def copy(source: K, destination: K, copyArgs: dev.profunktor.redis4cats.effects.CopyArgs): F[Boolean] = transform(commands.copy(source, destination, copyArgs))
+    def copy(source: K, destination: K): F[Boolean] = transform(commands.copy(source, destination))
+    def dump(key: K): F[Option[Array[Byte]]] = transform(commands.dump(key))
+    def expire(key: K, expiresIn: scala.concurrent.duration.FiniteDuration, expireExistenceArg: dev.profunktor.redis4cats.effects.ExpireExistenceArg): F[Boolean] = transform(commands.expire(key, expiresIn, expireExistenceArg))
+    def expireAt(key: K, at: java.time.Instant, expireExistenceArg: dev.profunktor.redis4cats.effects.ExpireExistenceArg): F[Boolean] = transform(commands.expireAt(key, at, expireExistenceArg))
+    def persist(key: K): F[Boolean] = transform(commands.persist(key: K))
+    def randomKey: F[Option[K]] = transform(commands.randomKey)
+    def restore(key: K, value: Array[Byte], restoreArgs: dev.profunktor.redis4cats.effects.RestoreArgs): F[Unit] = transform(commands.restore(key, value, restoreArgs))
+    def restore(key: K, value: Array[Byte]): F[Unit] = transform(commands.restore(key, value))
+    def scan(cursor: dev.profunktor.redis4cats.data.KeyScanCursor[K], keyScanArgs: dev.profunktor.redis4cats.effects.KeyScanArgs): F[dev.profunktor.redis4cats.data.KeyScanCursor[K]] = transform(commands.scan(cursor, keyScanArgs))
+    def scan(keyScanArgs: dev.profunktor.redis4cats.effects.KeyScanArgs): F[dev.profunktor.redis4cats.data.KeyScanCursor[K]] = transform(commands.scan(keyScanArgs))
+    def typeOf(key: K): F[Option[dev.profunktor.redis4cats.effects.RedisType]] = transform(commands.typeOf(key))
+    def unlink(key: K*): F[Long] = transform(commands.unlink(key: _*))
+
+    // Members declared in dev.profunktor.redis4cats.algebra.Scripting
+    def evalReadOnly(script: String, output: dev.profunktor.redis4cats.effects.ScriptOutputType[V], keys: List[K], values: List[V]): F[output.R] = transform(commands.evalReadOnly(script, output, keys, values))
+    def evalReadOnly(script: String, output: dev.profunktor.redis4cats.effects.ScriptOutputType[V], keys: List[K]): F[output.R] = transform(commands.evalReadOnly(script, output, keys))
+    def evalReadOnly(script: String, output: dev.profunktor.redis4cats.effects.ScriptOutputType[V]): F[output.R] = transform(commands.evalReadOnly(script, output))
+    def evalShaReadOnly(digest: String, output: dev.profunktor.redis4cats.effects.ScriptOutputType[V], keys: List[K], values: List[V]): F[output.R] = transform(commands.evalShaReadOnly(digest, output, keys, values))
+    def evalShaReadOnly(digest: String, output: dev.profunktor.redis4cats.effects.ScriptOutputType[V], keys: List[K]): F[output.R] = transform(commands.evalShaReadOnly(digest, output, keys))
+    def evalShaReadOnly(digest: String, output: dev.profunktor.redis4cats.effects.ScriptOutputType[V]): F[output.R] = transform(commands.evalShaReadOnly(digest, output))
   }
 
   object MapKCommands {
