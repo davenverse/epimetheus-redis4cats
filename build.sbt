@@ -1,19 +1,25 @@
-val scala213 = "2.13.16"
+ThisBuild / tlBaseVersion := "0.3" // current series x.y
 
+ThisBuild / organization := "io.chrisdavenport"
+ThisBuild / organizationName := "Christopher Davenport"
+ThisBuild / startYear := Some(2022)
+ThisBuild / licenses := Seq(License.MIT)
+ThisBuild / developers := List(
+  tlGitHubDev("christopherdavenport", "Christopher Davenport")
+)
+
+// sbt-davenverse published a snapshot from main on every push; preserve that.
+ThisBuild / tlCiReleaseBranches := Seq("main")
+
+val scala213 = "2.13.18"
 ThisBuild / scalaVersion := scala213
-ThisBuild / crossScalaVersions := Seq("2.12.20", scala213, "3.3.5")
+ThisBuild / crossScalaVersions := Seq("2.12.20", scala213, "3.3.8")
 
-ThisBuild / licenses := Seq("MIT" -> url("http://opensource.org/licenses/MIT"))
-
-val kindProjectorV = "0.13.3"
+val kindProjectorV = "0.13.4"
 val betterMonadicForV = "0.3.1"
 
 // Projects
-lazy val `epimetheus-redis4cats` = project.in(file("."))
-  .disablePlugins(MimaPlugin)
-  .enablePlugins(NoPublishPlugin)
-  .settings(universalSettings)
-  .aggregate(core)
+lazy val `epimetheus-redis4cats` = tlCrossRootProject.aggregate(core)
 
 lazy val core = project.in(file("core"))
   .settings(commonSettings)
@@ -27,19 +33,17 @@ lazy val core = project.in(file("core"))
     })
   )
 
-// Microsite via sbt-davenverse
 lazy val site = project.in(file("site"))
-  .disablePlugins(MimaPlugin)
-  .enablePlugins(NoPublishPlugin)
-  .enablePlugins(DavenverseMicrositePlugin)
+  .enablePlugins(TypelevelSitePlugin)
   .dependsOn(core)
   .settings(universalSettings)
-  .settings{
-    import microsites._
-    Seq(
-      micrositeDescription := "Redis4cats Metrics",
-    )
-  }
+  .settings(
+    laikaTheme := tlSiteHelium.value.site
+      .topNavigationBar(
+        homeLink = laika.helium.config.IconLink.internal(laika.ast.Path.Root / "index.md", laika.helium.config.HeliumIcon.home)
+      )
+      .build
+  )
 
 // For regular modules
 lazy val commonSettings = universalSettings ++ Seq(
@@ -54,12 +58,17 @@ lazy val commonSettings = universalSettings ++ Seq(
   }.toList.flatten
 )
 
-// For regular modules, the root project, and the microsite
+// Compiler settings DavenversePlugin injected globally. sbt-typelevel-ci-release
+// does not supply these (only sbt-typelevel-settings would).
 lazy val universalSettings = Seq(
-  // overrides the stale one in sbt-davenverse
   libraryDependencies ++= PartialFunction.condOpt(CrossVersion.partialVersion(scalaVersion.value)) { case Some((2, _)) =>
     Seq(
       compilerPlugin("org.typelevel" % "kind-projector" % kindProjectorV cross CrossVersion.full),
     )
-  }.toList.flatten
+  }.toList.flatten,
+  scalacOptions ++= (CrossVersion.partialVersion(scalaVersion.value) match {
+    case Some((3, _)) => Seq("-Ykind-projector")
+    case Some((2, 12)) => Seq("-Ypartial-unification")
+    case _ => Nil
+  })
 )
