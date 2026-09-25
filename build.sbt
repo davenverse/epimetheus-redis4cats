@@ -9,7 +9,7 @@ ThisBuild / developers := List(
 )
 
 // sbt-davenverse published a snapshot from main on every push; preserve that.
-ThisBuild / tlCiReleaseBranches := Seq("main")
+ThisBuild / tlCiReleaseBranches := Seq()
 
 val scala213 = "2.13.18"
 ThisBuild / scalaVersion := scala213
