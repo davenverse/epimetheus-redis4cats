@@ -14,7 +14,7 @@ ThisBuild / tlCiReleaseBranches := Seq()
 
 val scala213 = "2.13.18"
 ThisBuild / scalaVersion := scala213
-ThisBuild / crossScalaVersions := Seq("2.12.20", scala213, "3.3.8")
+ThisBuild / crossScalaVersions := Seq(scala213, "3.3.8")
 
 val kindProjectorV = "0.13.4"
 val betterMonadicForV = "0.3.1"
@@ -49,7 +49,7 @@ lazy val site = project.in(file("site"))
 // For regular modules
 lazy val commonSettings = universalSettings ++ Seq(
   libraryDependencies ++= Seq(
-    "io.chrisdavenport"           %% "epimetheus"                 % "0.5.0",
+    "io.chrisdavenport"           %% "epimetheus"                 % "0.7.1",
     "dev.profunktor"              %% "redis4cats-effects"         % "1.7.2"
   ),
   libraryDependencies ++= PartialFunction.condOpt(CrossVersion.partialVersion(scalaVersion.value)) { case Some((2, _)) =>

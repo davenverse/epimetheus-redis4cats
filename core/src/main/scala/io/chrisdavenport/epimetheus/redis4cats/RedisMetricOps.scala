@@ -31,7 +31,7 @@ trait RedisMetricOps[M[_]] {
 object RedisMetricOps {
 
   def build[F[_]: Sync](
-      cr: CollectorRegistry[F],
+      cr: PrometheusRegistry[F],
       prefix: Name = Name("redis4cats"), 
       buckets: List[Double] = Histogram.defaults,
     ): F[RedisMetricOps[F]] = 
@@ -74,7 +74,7 @@ object RedisMetricOps {
   )
   private object MetricsCollection {
     def build[F[_]: Sync](
-      cr: CollectorRegistry[F],
+      cr: PrometheusRegistry[F],
       prefix: Name, 
       buckets: List[Double],
     ) = for {
