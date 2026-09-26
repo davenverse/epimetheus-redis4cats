@@ -49,7 +49,7 @@ lazy val site = project.in(file("site"))
 // For regular modules
 lazy val commonSettings = universalSettings ++ Seq(
   libraryDependencies ++= Seq(
-    "io.chrisdavenport"           %% "epimetheus"                 % "0.5.0",
+    "io.chrisdavenport"           %% "epimetheus"                 % "0.7.0",
     "dev.profunktor"              %% "redis4cats-effects"         % "1.7.2"
   ),
   libraryDependencies ++= PartialFunction.condOpt(CrossVersion.partialVersion(scalaVersion.value)) { case Some((2, _)) =>
