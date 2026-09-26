@@ -14,7 +14,7 @@ ThisBuild / tlCiReleaseBranches := Seq()
 
 val scala213 = "2.13.18"
 ThisBuild / scalaVersion := scala213
-ThisBuild / crossScalaVersions := Seq("2.12.20", scala213, "3.3.8")
+ThisBuild / crossScalaVersions := Seq(scala213, "3.3.8")
 
 val kindProjectorV = "0.13.4"
 val betterMonadicForV = "0.3.1"
